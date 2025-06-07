@@ -19,6 +19,7 @@ export const App: React.FC = () => {
   const [title, setTitle] = useState('');
   const [errorMessage, setErrorMessage] = useState<ErrorMessage>('');
   const [activeLink, setActiveLink] = useState('all');
+  const [loadingIds, setLoadingIds] = useState<number[]>([]);
 
   const updateTodos = useCallback(
     (link = activeLink) => {
@@ -99,12 +100,13 @@ export const App: React.FC = () => {
             })}
             data-cy="ToggleAllButton"
             onClick={() => {
-              const allCompleted = todos.every(todo => todo.completed);
+              const allTodos = [...activeTodos, ...completedTodos];
+              const allCompleted = allTodos.every(todo => todo.completed);
 
               const newStatus = allCompleted ? false : true;
 
               Promise.all(
-                todos.map(todo =>
+                allTodos.map(todo =>
                   changeTodo(todo.id, { completed: newStatus }),
                 ),
               )
@@ -129,6 +131,7 @@ export const App: React.FC = () => {
               todo={todo}
               updateTodos={updateTodos}
               setErrorMessage={setErrorMessage}
+              isLoading={loadingIds.includes(todo.id)}
             />
           ))}
           {tempTodo && (
@@ -137,7 +140,7 @@ export const App: React.FC = () => {
               todo={tempTodo}
               updateTodos={updateTodos}
               setErrorMessage={setErrorMessage}
-              todoLoading={true}
+              isLoading={true}
             />
           )}
         </section>
@@ -201,9 +204,11 @@ export const App: React.FC = () => {
               data-cy="ClearCompletedButton"
               disabled={completedTodos.length === 0 ? true : false}
               onClick={() => {
+                setLoadingIds(completedTodos.map(todo => todo.id));
                 Promise.all(completedTodos.map(todo => deleteTodo(todo.id)))
                   .then(() => updateTodos())
-                  .catch(() => setErrorMessage('Unable to delete a todo'));
+                  .catch(() => setErrorMessage('Unable to delete a todo'))
+                  .finally(() => setLoadingIds([]));
               }}
             >
               Clear completed

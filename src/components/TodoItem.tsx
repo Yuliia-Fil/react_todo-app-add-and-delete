@@ -9,19 +9,19 @@ type Props = {
   todo: Todo;
   updateTodos: () => void;
   setErrorMessage: (e: ErrorMessage) => void;
-  todoLoading?: boolean;
+  isLoading: boolean;
 };
 
 export const TodoItem = ({
   todo,
   updateTodos,
   setErrorMessage,
-  todoLoading: todoLoadingProp,
+  isLoading,
 }: Props) => {
   const [hovered, setHovered] = useState(false);
   const [todoLoading, setTodoLoading] = useState(false);
 
-  const isLoading = todoLoadingProp ?? todoLoading;
+  // const isLoading = todoLoadingProp ?? todoLoading;
 
   return (
     <>
@@ -78,7 +78,7 @@ export const TodoItem = ({
         <div
           data-cy="TodoLoader"
           className={classNames('modal', 'overlay', {
-            'is-active': isLoading,
+            'is-active': isLoading || todoLoading,
           })}
         >
           <div className="modal-background has-background-white-ter" />
