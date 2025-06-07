@@ -2,7 +2,7 @@
 /* eslint-disable jsx-a11y/control-has-associated-label */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { UserWarning } from './UserWarning';
-import { getTodos, USER_ID } from './api/todos';
+import { changeTodo, deleteTodo, getTodos, USER_ID } from './api/todos';
 
 import { Todo } from './types/Todo';
 import { TodoItem } from './components/TodoItem';
@@ -94,8 +94,23 @@ export const App: React.FC = () => {
           {/* this button should have `active` class only if all todos are completed */}
           <button
             type="button"
-            className="todoapp__toggle-all active"
+            className={classNames('todoapp__toggle-all', {
+              active: activeTodos.length === 0,
+            })}
             data-cy="ToggleAllButton"
+            onClick={() => {
+              const allCompleted = todos.every(todo => todo.completed);
+
+              const newStatus = allCompleted ? false : true;
+
+              Promise.all(
+                todos.map(todo =>
+                  changeTodo(todo.id, { completed: newStatus }),
+                ),
+              )
+                .then(() => updateTodos())
+                .catch(() => setErrorMessage('Unable to update a todo'));
+            }}
           />
 
           <Form
@@ -185,6 +200,11 @@ export const App: React.FC = () => {
               className="todoapp__clear-completed"
               data-cy="ClearCompletedButton"
               disabled={completedTodos.length === 0 ? true : false}
+              onClick={() => {
+                Promise.all(completedTodos.map(todo => deleteTodo(todo.id)))
+                  .then(() => updateTodos())
+                  .catch(() => setErrorMessage('Unable to delete a todo'));
+              }}
             >
               Clear completed
             </button>

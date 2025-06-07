@@ -18,7 +18,6 @@ export const TodoItem = ({
   setErrorMessage,
   todoLoading: todoLoadingProp,
 }: Props) => {
-  const [checked, setChecked] = useState(todo.completed);
   const [hovered, setHovered] = useState(false);
   const [todoLoading, setTodoLoading] = useState(false);
 
@@ -28,21 +27,27 @@ export const TodoItem = ({
     <>
       <div
         data-cy="Todo"
-        className={classNames('todo', { completed: checked })}
+        className={classNames('todo', { completed: todo.completed })}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
+        onMouseMove={() => {
+          if (!hovered) {
+            setHovered(true);
+          }
+        }}
       >
         <label className="todo__status-label">
           <input
             data-cy="TodoStatus"
             type="checkbox"
             className="todo__status"
-            checked={checked}
-            onChange={e => {
-              setChecked(e.target.checked);
-              changeTodo(todo.id, { completed: e.target.checked }).then(() =>
-                updateTodos(),
-              );
+            checked={todo.completed}
+            onChange={() => {
+              setTodoLoading(true);
+              changeTodo(todo.id, { completed: !todo.completed })
+                .then(() => updateTodos())
+                .catch(() => setErrorMessage('Unable to update a todo'))
+                .finally(() => setTodoLoading(false));
             }}
           />
         </label>
