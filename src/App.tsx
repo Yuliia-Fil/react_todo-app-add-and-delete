@@ -1,63 +1,23 @@
 /* eslint-disable jsx-a11y/label-has-associated-control */
 /* eslint-disable jsx-a11y/control-has-associated-label */
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { UserWarning } from './UserWarning';
-import { changeTodo, deleteTodo, getTodos, USER_ID } from './api/todos';
-
+import { getTodos, USER_ID } from './api/todos';
 import { Todo } from './types/Todo';
-import { TodoItem } from './components/TodoItem';
-import classNames from 'classnames';
 import { ErrorMessage } from './types/ErrorMessage';
-import { Form } from './components/Form';
 import { ErrorNotification } from './components/ErrorNotification';
+import { ActiveLink } from './types/ActiveLink';
+import { Footer } from './components/Footer';
+import { TodoList } from './components/TodoList';
+import { Header } from './components/Header';
 
 export const App: React.FC = () => {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [tempTodo, setTempTodo] = useState<Todo | null>(null);
-  const [activeTodos, setActiveTodos] = useState<Todo[]>([]);
-  const [completedTodos, setCompletedTodos] = useState<Todo[]>([]);
   const [title, setTitle] = useState('');
   const [errorMessage, setErrorMessage] = useState<ErrorMessage>('');
-  const [activeLink, setActiveLink] = useState('all');
+  const [activeLink, setActiveLink] = useState<ActiveLink>('all');
   const [loadingIds, setLoadingIds] = useState<number[]>([]);
-
-  const updateTodos = useCallback(
-    (link = activeLink) => {
-      switch (link) {
-        case 'all':
-          getTodos()
-            .then(allTodos => {
-              setTodos(allTodos);
-              setActiveTodos(allTodos.filter(todo => !todo.completed));
-              setCompletedTodos(allTodos.filter(todo => todo.completed));
-            })
-            .catch(() => setErrorMessage('Unable to load todos'));
-
-          break;
-        case 'active':
-          getTodos()
-            .then(allTodos => {
-              setTodos(allTodos.filter(todo => !todo.completed));
-              setActiveTodos(allTodos.filter(todo => !todo.completed));
-              setCompletedTodos(allTodos.filter(todo => todo.completed));
-            })
-            .catch(() => setErrorMessage('Unable to load todos'));
-
-          break;
-        case 'completed':
-          getTodos()
-            .then(allTodos => {
-              setTodos(allTodos.filter(todo => todo.completed));
-              setActiveTodos(allTodos.filter(todo => !todo.completed));
-              setCompletedTodos(allTodos.filter(todo => todo.completed));
-            })
-            .catch(() => setErrorMessage('Unable to load todos'));
-
-          break;
-      }
-    },
-    [activeLink],
-  );
 
   const timeoutRef = useRef<number | null>(null);
 
@@ -81,7 +41,11 @@ export const App: React.FC = () => {
     };
   }, [errorMessage]);
 
-  useEffect(() => updateTodos(), [updateTodos]);
+  useEffect(() => {
+    getTodos()
+      .then(todosFromServer => setTodos(todosFromServer))
+      .catch(() => setErrorMessage('Unable to load todos'));
+  }, []);
 
   if (!USER_ID) {
     return <UserWarning />;
@@ -91,129 +55,33 @@ export const App: React.FC = () => {
     <div className="todoapp">
       <h1 className="todoapp__title">todos</h1>
       <div className="todoapp__content">
-        <header className="todoapp__header">
-          {/* this button should have `active` class only if all todos are completed */}
-          <button
-            type="button"
-            className={classNames('todoapp__toggle-all', {
-              active: activeTodos.length === 0,
-            })}
-            data-cy="ToggleAllButton"
-            onClick={() => {
-              const allTodos = [...activeTodos, ...completedTodos];
-              const allCompleted = allTodos.every(todo => todo.completed);
+        <Header
+          todos={todos}
+          setTodos={setTodos}
+          setTempTodo={setTempTodo}
+          title={title}
+          setTitle={setTitle}
+          setErrorMessage={setErrorMessage}
+        />
 
-              const newStatus = allCompleted ? false : true;
+        <TodoList
+          todos={todos}
+          tempTodo={tempTodo}
+          loadingIds={loadingIds}
+          setTodos={setTodos}
+          setErrorMessage={setErrorMessage}
+          activeLink={activeLink}
+        />
 
-              Promise.all(
-                allTodos.map(todo =>
-                  changeTodo(todo.id, { completed: newStatus }),
-                ),
-              )
-                .then(() => updateTodos())
-                .catch(() => setErrorMessage('Unable to update a todo'));
-            }}
-          />
-
-          <Form
-            title={title}
-            updateTodos={updateTodos}
-            setTitle={setTitle}
+        {todos.length > 0 && (
+          <Footer
+            todos={todos}
+            setTodos={setTodos}
+            activeLink={activeLink}
+            setActiveLink={setActiveLink}
             setErrorMessage={setErrorMessage}
-            setTempTodo={setTempTodo}
+            setLoadingIds={setLoadingIds}
           />
-        </header>
-
-        <section className="todoapp__main" data-cy="TodoList">
-          {todos.map(todo => (
-            <TodoItem
-              key={todo.id}
-              todo={todo}
-              updateTodos={updateTodos}
-              setErrorMessage={setErrorMessage}
-              isLoading={loadingIds.includes(todo.id)}
-            />
-          ))}
-          {tempTodo && (
-            <TodoItem
-              key={tempTodo.id}
-              todo={tempTodo}
-              updateTodos={updateTodos}
-              setErrorMessage={setErrorMessage}
-              isLoading={true}
-            />
-          )}
-        </section>
-
-        {/* Hide the footer if there are no todos */}
-        {activeTodos.length + completedTodos.length > 0 && (
-          <footer className="todoapp__footer" data-cy="Footer">
-            <span className="todo-count" data-cy="TodosCounter">
-              {`${activeTodos.length} items left`}
-            </span>
-
-            {/* Active link should have the 'selected' class */}
-            <nav className="filter" data-cy="Filter">
-              <a
-                href="#/"
-                className={classNames('filter__link', {
-                  selected: activeLink === 'all',
-                })}
-                data-cy="FilterLinkAll"
-                onClick={() => {
-                  setActiveLink('all');
-                  updateTodos('all');
-                }}
-              >
-                All
-              </a>
-
-              <a
-                href="#/active"
-                className={classNames('filter__link', {
-                  selected: activeLink === 'active',
-                })}
-                data-cy="FilterLinkActive"
-                onClick={() => {
-                  setActiveLink('active');
-                  updateTodos('active');
-                }}
-              >
-                Active
-              </a>
-
-              <a
-                href="#/completed"
-                className={classNames('filter__link', {
-                  selected: activeLink === 'completed',
-                })}
-                data-cy="FilterLinkCompleted"
-                onClick={() => {
-                  setActiveLink('completed');
-                  updateTodos('completed');
-                }}
-              >
-                Completed
-              </a>
-            </nav>
-
-            {/* this button should be disabled if there are no completed todos */}
-            <button
-              type="button"
-              className="todoapp__clear-completed"
-              data-cy="ClearCompletedButton"
-              disabled={completedTodos.length === 0 ? true : false}
-              onClick={() => {
-                setLoadingIds(completedTodos.map(todo => todo.id));
-                Promise.all(completedTodos.map(todo => deleteTodo(todo.id)))
-                  .then(() => updateTodos())
-                  .catch(() => setErrorMessage('Unable to delete a todo'))
-                  .finally(() => setLoadingIds([]));
-              }}
-            >
-              Clear completed
-            </button>
-          </footer>
         )}
       </div>
 

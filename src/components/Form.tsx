@@ -5,7 +5,7 @@ import { Todo } from '../types/Todo';
 
 type Props = {
   title: string;
-  updateTodos: () => void;
+  setTodos: React.Dispatch<React.SetStateAction<Todo[]>>;
   setTitle: (t: string) => void;
   setErrorMessage: (e: ErrorMessage) => void;
   setTempTodo: (x: Todo | null) => void;
@@ -16,7 +16,7 @@ export const Form = ({
   setTitle,
   setErrorMessage,
   setTempTodo,
-  updateTodos,
+  setTodos,
 }: Props) => {
   const [formLoading, setFormLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -48,17 +48,17 @@ export const Form = ({
         });
 
         addTodo({
-          userId: 3025,
+          userId: USER_ID,
           title: title.trim(),
           completed: false,
         })
-          .then(() => {
-            updateTodos();
+          .then(newTodo => {
+            setTodos(prevTodos => [...prevTodos, newTodo]);
             setTitle('');
             setTempTodo(null);
           })
           .catch(error => {
-            setErrorMessage(' Unable to add a todo');
+            setErrorMessage('Unable to add a todo');
             setTempTodo(null);
             throw error;
           })
