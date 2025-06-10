@@ -10,6 +10,8 @@ type Props = {
   setErrorMessage: (e: ErrorMessage) => void;
   activeLink: ActiveLink;
   loadingIds: number[];
+  setLoadingIds: (ids: number[]) => void;
+  focusInput: () => void;
 };
 
 export const TodoList = ({
@@ -18,7 +20,9 @@ export const TodoList = ({
   setTodos,
   setErrorMessage,
   loadingIds,
+  setLoadingIds,
   activeLink,
+  focusInput,
 }: Props) => {
   return (
     <section className="todoapp__main" data-cy="TodoList">
@@ -37,9 +41,11 @@ export const TodoList = ({
           <TodoItem
             key={todo.id}
             todo={todo}
-            isLoading={loadingIds.includes(todo.id)}
+            loadingIds={loadingIds}
+            setLoadingIds={setLoadingIds}
             setTodos={setTodos}
             setErrorMessage={setErrorMessage}
+            focusInput={focusInput}
           />
         ))}
       {tempTodo && (
@@ -48,7 +54,9 @@ export const TodoList = ({
           todo={tempTodo}
           setTodos={setTodos}
           setErrorMessage={setErrorMessage}
-          isLoading={true}
+          loadingIds={[0]}
+          setLoadingIds={setLoadingIds}
+          focusInput={focusInput}
         />
       )}
     </section>

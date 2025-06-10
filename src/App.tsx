@@ -20,6 +20,13 @@ export const App: React.FC = () => {
   const [loadingIds, setLoadingIds] = useState<number[]>([]);
 
   const timeoutRef = useRef<number | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const focusInput = () => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  };
 
   useEffect(() => {
     if (errorMessage) {
@@ -62,15 +69,18 @@ export const App: React.FC = () => {
           title={title}
           setTitle={setTitle}
           setErrorMessage={setErrorMessage}
+          inputRef={inputRef}
         />
 
         <TodoList
           todos={todos}
           tempTodo={tempTodo}
           loadingIds={loadingIds}
+          setLoadingIds={setLoadingIds}
           setTodos={setTodos}
           setErrorMessage={setErrorMessage}
           activeLink={activeLink}
+          focusInput={focusInput}
         />
 
         {todos.length > 0 && (
@@ -81,6 +91,7 @@ export const App: React.FC = () => {
             setActiveLink={setActiveLink}
             setErrorMessage={setErrorMessage}
             setLoadingIds={setLoadingIds}
+            focusInput={focusInput}
           />
         )}
       </div>

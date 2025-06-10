@@ -1,8 +1,8 @@
 import classNames from 'classnames';
 import { ErrorMessage } from '../types/ErrorMessage';
 import { Todo } from '../types/Todo';
-import { changeTodo } from '../api/todos';
-import { Form } from './Form';
+import { addTodo, changeTodo, USER_ID } from '../api/todos';
+import { useEffect, useState } from 'react';
 
 type Props = {
   todos: Todo[];
@@ -11,6 +11,7 @@ type Props = {
   title: string;
   setTitle: (t: string) => void;
   setTempTodo: (t: Todo | null) => void;
+  inputRef: React.RefObject<HTMLInputElement>;
 };
 export const Header = ({
   todos,
@@ -19,10 +20,53 @@ export const Header = ({
   title,
   setTitle,
   setErrorMessage,
+  inputRef,
 }: Props) => {
+  const [formLoading, setFormLoading] = useState(false);
+
+  useEffect(() => {
+    if (!formLoading && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [formLoading, inputRef]);
+
+  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!title.trim()) {
+      setErrorMessage('Title should not be empty');
+
+      return;
+    }
+
+    setFormLoading(true);
+
+    setTempTodo({
+      title: title.trim(),
+      id: 0,
+      userId: USER_ID,
+      completed: false,
+    });
+
+    addTodo({
+      userId: USER_ID,
+      title: title.trim(),
+      completed: false,
+    })
+      .then(newTodo => {
+        setTodos(prevTodos => [...prevTodos, newTodo]);
+        setTitle('');
+        setTempTodo(null);
+      })
+      .catch(() => {
+        setErrorMessage('Unable to add a todo');
+        setTempTodo(null);
+      })
+      .finally(() => setFormLoading(false));
+  }
+
   return (
     <header className="todoapp__header">
-      {/* this button should have `active` class only if all todos are completed */}
       <button
         type="button"
         className={classNames('todoapp__toggle-all', {
@@ -47,14 +91,21 @@ export const Header = ({
             .catch(() => setErrorMessage('Unable to update a todo'));
         }}
       />
-
-      <Form
-        title={title}
-        setTodos={setTodos}
-        setTitle={setTitle}
-        setErrorMessage={setErrorMessage}
-        setTempTodo={setTempTodo}
-      />
+      <form onSubmit={handleSubmit}>
+        <input
+          data-cy="NewTodoField"
+          type="text"
+          className="todoapp__new-todo"
+          placeholder="What needs to be done?"
+          ref={inputRef}
+          disabled={formLoading}
+          value={title}
+          onChange={e => {
+            setTitle(e.target.value);
+            setErrorMessage('');
+          }}
+        />
+      </form>
     </header>
   );
 };

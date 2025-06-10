@@ -1,5 +1,5 @@
 /* eslint-disable jsx-a11y/label-has-associated-control */
-import { useState } from 'react';
+
 import { Todo } from '../types/Todo';
 import classNames from 'classnames';
 import { changeTodo, deleteTodo } from '../api/todos';
@@ -9,17 +9,19 @@ type Props = {
   todo: Todo;
   setTodos: React.Dispatch<React.SetStateAction<Todo[]>>;
   setErrorMessage: (e: ErrorMessage) => void;
-  isLoading: boolean;
+  loadingIds: number[];
+  setLoadingIds: (ids: number[]) => void;
+  focusInput: () => void;
 };
 
 export const TodoItem = ({
   todo,
   setTodos,
   setErrorMessage,
-  isLoading,
+  loadingIds,
+  setLoadingIds,
+  focusInput,
 }: Props) => {
-  const [todoLoading, setTodoLoading] = useState(false);
-
   return (
     <div
       data-cy="Todo"
@@ -32,7 +34,7 @@ export const TodoItem = ({
           className="todo__status"
           checked={todo.completed}
           onChange={() => {
-            setTodoLoading(true);
+            setLoadingIds([...loadingIds, todo.id]);
             changeTodo(todo.id, { completed: !todo.completed })
               .then(() =>
                 setTodos(prevTodos =>
@@ -49,7 +51,9 @@ export const TodoItem = ({
                 ),
               )
               .catch(() => setErrorMessage('Unable to update a todo'))
-              .finally(() => setTodoLoading(false));
+              .finally(() =>
+                setLoadingIds(loadingIds.filter(id => id !== todo.id)),
+              );
           }}
         />
       </label>
@@ -63,7 +67,7 @@ export const TodoItem = ({
         className="todo__remove"
         data-cy="TodoDelete"
         onClick={() => {
-          setTodoLoading(true);
+          setLoadingIds([...loadingIds, todo.id]);
           deleteTodo(todo.id)
             .then(() =>
               setTodos(prevTodos =>
@@ -71,7 +75,10 @@ export const TodoItem = ({
               ),
             )
             .catch(() => setErrorMessage('Unable to delete a todo'))
-            .finally(() => setTodoLoading(false));
+            .finally(() => {
+              setLoadingIds(loadingIds.filter(id => id !== todo.id));
+              focusInput();
+            });
         }}
       >
         ×
@@ -80,7 +87,7 @@ export const TodoItem = ({
       <div
         data-cy="TodoLoader"
         className={classNames('modal', 'overlay', {
-          'is-active': isLoading || todoLoading,
+          'is-active': loadingIds.includes(todo.id),
         })}
       >
         <div className="modal-background has-background-white-ter" />

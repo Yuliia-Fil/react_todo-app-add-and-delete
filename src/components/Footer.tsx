@@ -11,6 +11,7 @@ type Props = {
   activeLink: ActiveLink;
   setActiveLink: (l: ActiveLink) => void;
   setLoadingIds: (ids: number[]) => void;
+  focusInput: () => void;
 };
 
 export const Footer = ({
@@ -20,6 +21,7 @@ export const Footer = ({
   setActiveLink,
   setErrorMessage,
   setLoadingIds,
+  focusInput,
 }: Props) => {
   return (
     <footer className="todoapp__footer" data-cy="Footer">
@@ -34,6 +36,7 @@ export const Footer = ({
         setTodos={setTodos}
         setErrorMessage={setErrorMessage}
         setLoadingIds={setLoadingIds}
+        focusInput={focusInput}
       />
     </footer>
   );
