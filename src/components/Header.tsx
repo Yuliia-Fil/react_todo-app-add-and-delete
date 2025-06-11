@@ -30,7 +30,7 @@ export const Header = ({
     }
   }, [formLoading, inputRef]);
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (!title.trim()) {
@@ -63,7 +63,25 @@ export const Header = ({
         setTempTodo(null);
       })
       .finally(() => setFormLoading(false));
-  }
+  };
+
+  const handleToggle = () => {
+    const allCompleted = todos.every(todo => todo.completed);
+
+    const newStatus = allCompleted ? false : true;
+
+    Promise.all(
+      todos.map(todo => changeTodo(todo.id, { completed: newStatus })),
+    )
+      .then(() =>
+        setTodos(
+          todos.map(todo => {
+            return { ...todo, completed: newStatus };
+          }),
+        ),
+      )
+      .catch(() => setErrorMessage('Unable to update a todo'));
+  };
 
   return (
     <header className="todoapp__header">
@@ -73,23 +91,7 @@ export const Header = ({
           active: todos.every(todo => todo.completed),
         })}
         data-cy="ToggleAllButton"
-        onClick={() => {
-          const allCompleted = todos.every(todo => todo.completed);
-
-          const newStatus = allCompleted ? false : true;
-
-          Promise.all(
-            todos.map(todo => changeTodo(todo.id, { completed: newStatus })),
-          )
-            .then(() =>
-              setTodos(
-                todos.map(todo => {
-                  return { ...todo, completed: newStatus };
-                }),
-              ),
-            )
-            .catch(() => setErrorMessage('Unable to update a todo'));
-        }}
+        onClick={handleToggle}
       />
       <form onSubmit={handleSubmit}>
         <input

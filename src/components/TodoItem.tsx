@@ -15,71 +15,71 @@ type Props = {
 };
 
 export const TodoItem = ({
-  todo,
+  todo: { title, id, completed },
   setTodos,
   setErrorMessage,
   loadingIds,
   setLoadingIds,
   focusInput,
 }: Props) => {
+  const handleCheckbox = () => {
+    setLoadingIds([...loadingIds, id]);
+    changeTodo(id, { completed: !completed })
+      .then(() =>
+        setTodos(prevTodos =>
+          prevTodos.map(prevTodo => {
+            if (prevTodo.id !== id) {
+              return prevTodo;
+            }
+
+            return {
+              ...prevTodo,
+              completed: !completed,
+            };
+          }),
+        ),
+      )
+      .catch(() => setErrorMessage('Unable to update a todo'))
+      .finally(() => setLoadingIds(loadingIds.filter(loadId => loadId !== id)));
+  };
+
+  const handleDelete = () => {
+    setLoadingIds([...loadingIds, id]);
+    deleteTodo(id)
+      .then(() =>
+        setTodos(prevTodos => prevTodos.filter(prevTodo => prevTodo.id !== id)),
+      )
+      .catch(() => setErrorMessage('Unable to delete a todo'))
+      .finally(() => {
+        setLoadingIds(loadingIds.filter(loadId => loadId !== id));
+        focusInput();
+      });
+  };
+
   return (
     <div
       data-cy="Todo"
-      className={classNames('todo', { completed: todo.completed })}
+      className={classNames('todo', { completed: completed })}
     >
       <label className="todo__status-label">
         <input
           data-cy="TodoStatus"
           type="checkbox"
           className="todo__status"
-          checked={todo.completed}
-          onChange={() => {
-            setLoadingIds([...loadingIds, todo.id]);
-            changeTodo(todo.id, { completed: !todo.completed })
-              .then(() =>
-                setTodos(prevTodos =>
-                  prevTodos.map(prevTodo => {
-                    if (prevTodo.id !== todo.id) {
-                      return prevTodo;
-                    }
-
-                    return {
-                      ...prevTodo,
-                      completed: !todo.completed,
-                    };
-                  }),
-                ),
-              )
-              .catch(() => setErrorMessage('Unable to update a todo'))
-              .finally(() =>
-                setLoadingIds(loadingIds.filter(id => id !== todo.id)),
-              );
-          }}
+          checked={completed}
+          onChange={handleCheckbox}
         />
       </label>
 
       <span data-cy="TodoTitle" className="todo__title">
-        {todo.title}
+        {title}
       </span>
 
       <button
         type="button"
         className="todo__remove"
         data-cy="TodoDelete"
-        onClick={() => {
-          setLoadingIds([...loadingIds, todo.id]);
-          deleteTodo(todo.id)
-            .then(() =>
-              setTodos(prevTodos =>
-                prevTodos.filter(prevTodo => prevTodo.id !== todo.id),
-              ),
-            )
-            .catch(() => setErrorMessage('Unable to delete a todo'))
-            .finally(() => {
-              setLoadingIds(loadingIds.filter(id => id !== todo.id));
-              focusInput();
-            });
-        }}
+        onClick={handleDelete}
       >
         ×
       </button>
@@ -87,7 +87,7 @@ export const TodoItem = ({
       <div
         data-cy="TodoLoader"
         className={classNames('modal', 'overlay', {
-          'is-active': loadingIds.includes(todo.id),
+          'is-active': loadingIds.includes(id),
         })}
       >
         <div className="modal-background has-background-white-ter" />

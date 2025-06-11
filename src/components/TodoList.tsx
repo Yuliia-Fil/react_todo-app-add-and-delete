@@ -24,30 +24,30 @@ export const TodoList = ({
   activeLink,
   focusInput,
 }: Props) => {
+  const filteredTodos = todos.filter(todo => {
+    switch (activeLink) {
+      case ActiveLink.All:
+        return true;
+      case ActiveLink.Active:
+        return !todo.completed;
+      case ActiveLink.Completed:
+        return todo.completed;
+    }
+  });
+
   return (
     <section className="todoapp__main" data-cy="TodoList">
-      {todos
-        .filter(todo => {
-          switch (activeLink) {
-            case 'all':
-              return true;
-            case 'active':
-              return !todo.completed;
-            case 'completed':
-              return todo.completed;
-          }
-        })
-        .map(todo => (
-          <TodoItem
-            key={todo.id}
-            todo={todo}
-            loadingIds={loadingIds}
-            setLoadingIds={setLoadingIds}
-            setTodos={setTodos}
-            setErrorMessage={setErrorMessage}
-            focusInput={focusInput}
-          />
-        ))}
+      {filteredTodos.map(todo => (
+        <TodoItem
+          key={todo.id}
+          todo={todo}
+          loadingIds={loadingIds}
+          setLoadingIds={setLoadingIds}
+          setTodos={setTodos}
+          setErrorMessage={setErrorMessage}
+          focusInput={focusInput}
+        />
+      ))}
       {tempTodo && (
         <TodoItem
           key={tempTodo.id}

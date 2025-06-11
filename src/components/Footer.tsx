@@ -23,10 +23,12 @@ export const Footer = ({
   setLoadingIds,
   focusInput,
 }: Props) => {
+  const counter = todos.filter(todo => !todo.completed).length;
+
   return (
     <footer className="todoapp__footer" data-cy="Footer">
       <span className="todo-count" data-cy="TodosCounter">
-        {`${todos.filter(todo => !todo.completed).length} items left`}
+        {`${counter} items left`}
       </span>
 
       <NavLinks activeLink={activeLink} setActiveLink={setActiveLink} />

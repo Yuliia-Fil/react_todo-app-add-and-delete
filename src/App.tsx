@@ -16,10 +16,10 @@ export const App: React.FC = () => {
   const [tempTodo, setTempTodo] = useState<Todo | null>(null);
   const [title, setTitle] = useState('');
   const [errorMessage, setErrorMessage] = useState<ErrorMessage>('');
-  const [activeLink, setActiveLink] = useState<ActiveLink>('all');
+  const [activeLink, setActiveLink] = useState<ActiveLink>(ActiveLink.All);
   const [loadingIds, setLoadingIds] = useState<number[]>([]);
 
-  const timeoutRef = useRef<number | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const focusInput = () => {
@@ -34,7 +34,7 @@ export const App: React.FC = () => {
         clearTimeout(timeoutRef.current);
       }
 
-      timeoutRef.current = window.setTimeout(() => {
+      timeoutRef.current = setTimeout(() => {
         setErrorMessage('');
         timeoutRef.current = null;
       }, 3000);
@@ -50,7 +50,7 @@ export const App: React.FC = () => {
 
   useEffect(() => {
     getTodos()
-      .then(todosFromServer => setTodos(todosFromServer))
+      .then(setTodos)
       .catch(() => setErrorMessage('Unable to load todos'));
   }, []);
 

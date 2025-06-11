@@ -9,44 +9,25 @@ type Props = {
 export const NavLinks = ({ activeLink, setActiveLink }: Props) => {
   return (
     <nav className="filter" data-cy="Filter">
-      <a
-        href="#/"
-        className={classNames('filter__link', {
-          selected: activeLink === 'all',
-        })}
-        data-cy="FilterLinkAll"
-        onClick={() => {
-          setActiveLink('all');
-        }}
-      >
-        All
-      </a>
+      {(Object.keys(ActiveLink) as Array<keyof typeof ActiveLink>).map(link => {
+        const linkValue = ActiveLink[link];
 
-      <a
-        href="#/active"
-        className={classNames('filter__link', {
-          selected: activeLink === 'active',
-        })}
-        data-cy="FilterLinkActive"
-        onClick={() => {
-          setActiveLink('active');
-        }}
-      >
-        Active
-      </a>
-
-      <a
-        href="#/completed"
-        className={classNames('filter__link', {
-          selected: activeLink === 'completed',
-        })}
-        data-cy="FilterLinkCompleted"
-        onClick={() => {
-          setActiveLink('completed');
-        }}
-      >
-        Completed
-      </a>
+        return (
+          <a
+            key={link}
+            href="#/"
+            className={classNames('filter__link', {
+              selected: activeLink === linkValue,
+            })}
+            data-cy={`FilterLink${link}`}
+            onClick={() => {
+              setActiveLink(linkValue);
+            }}
+          >
+            {link}
+          </a>
+        );
+      })}
     </nav>
   );
 };
